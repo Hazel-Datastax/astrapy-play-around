@@ -16,6 +16,10 @@ df["Title"] = df["Title"].str.replace(r"\s*\(\d{4}\)$", "", regex=True)
 df["Duration"] = df["Duration"].str.replace(" min", "").astype(int)
 # Make the Genre column a list of genres
 df["Genre"] = df["Genre"].str.split(", ")
+# Drop Metascore column
+df = df.drop(columns=["Metascore"])
+# Fill NaN values in the Certificate column with "Not Rated"
+df["Certificate"] = df["Certificate"].fillna("Not Rated")
 
 # Convert the DataFrame to a list of dictionaries
 movies = df.to_dict(orient="records")
