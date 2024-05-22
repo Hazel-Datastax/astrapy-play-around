@@ -1,6 +1,7 @@
 import astrapy
 import os
 from dotenv import load_dotenv
+import json
 
 # Load the .env file and get the environment variables
 load_dotenv(".env")
@@ -27,3 +28,15 @@ collection_vector = database.create_collection(
     metric=metric,
     service=service
 )
+
+# Truncate the collection
+collection_vector.delete_all()
+
+# Load the data
+movies = json.load(open("movies.json"))
+
+# Insert the data into the collection - split movies into 50 batches(20 docs per batch)
+batch_size = 20
+for i in range(0, len(movies), batch_size):
+    batch = movies[i:i + batch_size]
+    collection_vector.insert_many(batch)
