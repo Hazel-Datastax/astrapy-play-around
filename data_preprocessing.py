@@ -20,6 +20,8 @@ df["Genre"] = df["Genre"].str.split(", ")
 df = df.drop(columns=["Metascore"])
 # Fill NaN values in the Certificate column with "Not Rated"
 df["Certificate"] = df["Certificate"].fillna("Not Rated")
+# Drop duplicates
+df = df.drop_duplicates(subset=["Title", "Year"])
 
 # Convert the DataFrame to a list of dictionaries
 movies = df.to_dict(orient="records")
