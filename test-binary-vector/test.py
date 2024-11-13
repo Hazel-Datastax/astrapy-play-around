@@ -15,36 +15,79 @@ token = os.getenv('ASTRA_DB_APPLICATION_TOKEN')
 endpoint = os.getenv('ASTRA_DB_API_ENDPOINT')
 
 db = DataAPIClient(
-    environment="prod",
+    environment="test",
     api_options=APIOptions(
         database_additional_headers={"Feature-Flag-tables": "true"},
         wire_format_options=WireFormatOptions(
-            binary_encode_vectors=False,           # False to disable default bin-encoding in client (but DataAPIVectors are still forcibly bin-encoded)
-            custom_datatypes_in_reading=True,     # False to return lists instead of DataAPIVector's
-            coerce_iterables_to_vectors=False,    # True to accept generators, lazy stuff & other "vector-likes" in payloads
+            binary_encode_vectors=False,
+            # False to disable default bin-encoding in client (but DataAPIVectors are still forcibly bin-encoded)
+            custom_datatypes_in_reading=True,  # False to return lists instead of DataAPIVector's
+            coerce_iterables_to_vectors=False,
+            # True to accept generators, lazy stuff & other "vector-likes" in payloads
         ),
     ),
 ).get_database(endpoint, token=token)
 db.get_database_admin().create_keyspace("default_keyspace", update_db_keyspace=True)
 
-# create a collection and write to it
-v3 = db.create_collection('test-binary-vector', dimension=1000)
 
-v3.insert_one({"$vector": np.random.rand(1000).tolist()})                 # will be sent according to `binary_encode_vectors`
-v3.insert_one({"$vector": DataAPIVector(np.random.rand(1000).tolist())})  # will be sent as binary nevertheless
-v3.delete_many({})
+# v3.insert_one({"$vector": np.random.rand(1000).tolist()})                 # will be sent according to `binary_encode_vectors`
+# v3.insert_one({"$vector": DataAPIVector(np.random.rand(1000).tolist())})  # will be sent as binary nevertheless
+# v3.delete_many({})
 
-vector = [{"$vector": np.random.rand(1000).tolist()} for _ in range(1000)]
-binary_vector = [{"$vector": DataAPIVector(np.random.rand(1000).tolist())} for _ in range(1000)]
 
-vector_start_time = time.time()
-for i in range(1000):
-    v3.insert_one(vector[i])
-vector_end_time = time.time()
-print(f"Inserting 1000 raw vectors took {vector_end_time - vector_start_time} seconds")
+def vector_insert_one(count: int, dimension: int):
+    vector = [{"$vector": np.random.rand(dimension).tolist()} for _ in range(count)]
+    # create a collection and write to it
+    collection = db.create_collection('vector_insert_one', dimension=dimension)
+    start = time.time()
+    for i in range(count):
+        collection.insert_one(vector[i])
+    end = time.time()
+    return end - start
 
-binary_vector_start_time = time.time()
-for i in range(1000):
-    v3.insert_one(binary_vector[i])
-binary_vector_end_time = time.time()
-print(f"Inserting 1000 binary vectors took {binary_vector_end_time - binary_vector_start_time} seconds")
+
+def vector_insert_many(count: int, dimension: int):
+    vector = [{"$vector": np.random.rand(dimension).tolist()} for _ in range(count)]
+    # create a collection and write to it
+    collection = db.create_collection('vector_insert_many', dimension=dimension)
+    start = time.time()
+    collection.insert_many(vector)
+    end = time.time()
+    return end - start
+
+
+def binary_vector_insert_one(count: int, dimension: int):
+    binary_vector = [{"$vector": DataAPIVector(np.random.rand(dimension).tolist())} for _ in range(count)]
+    # create a collection and write to it
+    collection = db.create_collection('binary_vector_insert_one', dimension=dimension)
+    start = time.time()
+    for i in range(count):
+        collection.insert_one(binary_vector[i])
+    end = time.time()
+    return end - start
+
+
+def binary_vector_insert_many(count: int, dimension: int):
+    binary_vector = [{"$vector": DataAPIVector(np.random.rand(dimension).tolist())} for _ in range(count)]
+    # create a collection and write to it
+    collection = db.create_collection('binary_vector_insert_many', dimension=dimension)
+    start = time.time()
+    collection.insert_many(binary_vector)
+    end = time.time()
+    return end - start
+
+
+def main():
+    results = []
+    for func in [vector_insert_one, vector_insert_many, binary_vector_insert_one, binary_vector_insert_many]:
+        result = func(1000, 1000)
+        results.append((func.__name__, result))
+
+    results.sort(key=lambda x: x[1])
+    slowest = results[-1][1]
+    for name, duration in results:
+        print(f"{name}: \t{duration:.12f} seconds \t {duration / slowest:.2f}x")
+
+
+if __name__ == '__main__':
+    main()
