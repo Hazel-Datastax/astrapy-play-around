@@ -5,12 +5,9 @@ from dotenv import load_dotenv
 import numpy as np
 import time
 import os
+import inspect
 
-# optional. Comment out for a less verbose logging (uncommented: shows all payloads, responses, headers etc)
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
-
-load_dotenv(".env")
+load_dotenv("../.env")
 token = os.getenv('ASTRA_DB_APPLICATION_TOKEN')
 endpoint = os.getenv('ASTRA_DB_API_ENDPOINT')
 
@@ -30,50 +27,51 @@ db = DataAPIClient(
 db.get_database_admin().create_keyspace("default_keyspace", update_db_keyspace=True)
 
 
-# v3.insert_one({"$vector": np.random.rand(1000).tolist()})                 # will be sent according to `binary_encode_vectors`
-# v3.insert_one({"$vector": DataAPIVector(np.random.rand(1000).tolist())})  # will be sent as binary nevertheless
-# v3.delete_many({})
-
-
 def vector_insert_one(count: int, dimension: int):
     vector = [{"$vector": np.random.rand(dimension).tolist()} for _ in range(count)]
+    collection_name = inspect.currentframe().f_code.co_name
     # create a collection and write to it
-    collection = db.create_collection('vector_insert_one', dimension=dimension)
+    collection = db.create_collection(collection_name, dimension=dimension)
     start = time.time()
     for i in range(count):
         collection.insert_one(vector[i])
     end = time.time()
+    db.drop_collection(collection_name)
     return end - start
 
 
 def vector_insert_many(count: int, dimension: int):
     vector = [{"$vector": np.random.rand(dimension).tolist()} for _ in range(count)]
+    collection_name = inspect.currentframe().f_code.co_name
     # create a collection and write to it
-    collection = db.create_collection('vector_insert_many', dimension=dimension)
+    collection = db.create_collection(collection_name, dimension=dimension)
     start = time.time()
     collection.insert_many(vector)
     end = time.time()
+    db.drop_collection(collection_name)
     return end - start
 
 
 def binary_vector_insert_one(count: int, dimension: int):
     binary_vector = [{"$vector": DataAPIVector(np.random.rand(dimension).tolist())} for _ in range(count)]
-    # create a collection and write to it
-    collection = db.create_collection('binary_vector_insert_one', dimension=dimension)
+    collection_name = inspect.currentframe().f_code.co_name
+    collection = db.create_collection(collection_name, dimension=dimension)
     start = time.time()
     for i in range(count):
         collection.insert_one(binary_vector[i])
     end = time.time()
+    db.drop_collection(collection_name)
     return end - start
 
 
 def binary_vector_insert_many(count: int, dimension: int):
     binary_vector = [{"$vector": DataAPIVector(np.random.rand(dimension).tolist())} for _ in range(count)]
-    # create a collection and write to it
-    collection = db.create_collection('binary_vector_insert_many', dimension=dimension)
+    collection_name = inspect.currentframe().f_code.co_name
+    collection = db.create_collection(collection_name, dimension=dimension)
     start = time.time()
     collection.insert_many(binary_vector)
     end = time.time()
+    db.drop_collection(collection_name)
     return end - start
 
 
@@ -89,5 +87,5 @@ def main():
         print(f"{name}: \t{duration:.12f} seconds \t {duration / slowest:.2f}x")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
