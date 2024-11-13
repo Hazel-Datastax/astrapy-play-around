@@ -77,7 +77,7 @@ def binary_vector_insert_many(num_of_doc: int, dimension: int):
 
 def main():
     num_of_docs = [1000, 10000, 100000, 1000000]
-    vector_dimensions = [256, 512, 1024, 4096]
+    vector_dimensions = [256, 512, 1024, 1500]
     for num_of_doc in num_of_docs:
         for dimension in vector_dimensions:
             print(f"=============== Number of docs: {num_of_doc}, Dimension: {dimension} ===============")
