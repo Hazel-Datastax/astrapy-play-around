@@ -37,7 +37,7 @@ def path_to_steps(path: str) -> list[str]:
             # Check rule (1.1): either i==0 or path[i-1]=='.'
             # Check rule (1.2): next char != '[' (if it exists)
             can_be_start = False
-            if (i == 0 or (i > 0 and path[i-1] == '.')):
+            if i == 0 or (i > 0 and path[i - 1] == '.'):
                 if i + 1 < n and path[i+1] != '[':
                     can_be_start = True
                 elif i + 1 == n:
@@ -83,15 +83,6 @@ def path_to_steps(path: str) -> list[str]:
             buffer.append('[' * store_count)
 
             continue  # continue the main loop
-
-        elif c == ']':
-            # If we encounter ']' without a recognized '[' in progress,
-            # it's just literal text. The rules say we only interpret ']'
-            # as an end marker if we've recognized a start marker.
-            # So here, just treat it as normal text.
-            buffer.append(']')
-            i += 1
-            continue
 
         else:
             # Normal character, just accumulate
@@ -145,7 +136,7 @@ if __name__ == "__main__":
     // no start marker so no end marker. It equals to "price.[bit.coin]", then split by .
     "price.[[bit.coin]" -> ["price", "[bit", "coin]"]
     """
-    # Test with your provided examples
+
     examples = [
         "price",
         "price.usd",
