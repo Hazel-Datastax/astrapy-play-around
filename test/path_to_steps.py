@@ -78,6 +78,8 @@ if __name__ == "__main__":
         "price.monkey[[0]]",
         "price.monkey[0]",
         "price.monkey[1]",
+        "a[a.b]c",
+        "a.[a.b].c.d"
     ]
 
     for ex in examples:
